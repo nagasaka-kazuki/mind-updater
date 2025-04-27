@@ -1,52 +1,53 @@
-import { pgTable,  varchar, boolean, timestamp, text, uuid } from "drizzle-orm/pg-core"
-import { z } from "zod";
 import {
-  createInsertSchema,
-  createSelectSchema,
-} from "drizzle-zod";
+  pgTable,
+  varchar,
+  boolean,
+  timestamp,
+  text,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { z } from "zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const mindsets = pgTable("mindsets", {
-  id: uuid('id').primaryKey(),
+  id: uuid("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   archived: boolean("archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-})
+});
 
 export const methods = pgTable("methods", {
-  id: uuid('id').primaryKey(),
+  id: uuid("id").primaryKey(),
   mindsetId: uuid("mindset_id")
     .references(() => mindsets.id, {
-      onDelete: 'cascade',
+      onDelete: "cascade",
     })
     .notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-})
+});
 
 export const success_logs = pgTable("success_logs", {
-  id: uuid('id').primaryKey(),
+  id: uuid("id").primaryKey(),
   mindsetId: uuid("mindset_id")
-    .references(() => mindsets.id,{
-      onDelete: 'cascade',
+    .references(() => mindsets.id, {
+      onDelete: "cascade",
     })
     .notNull(),
-  methodId: uuid("method_id")
-    .references(() => methods.id,{
-      onDelete: 'cascade',
-    }),
+  methodId: uuid("method_id").references(() => methods.id, {
+    onDelete: "cascade",
+  }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   memo: text("memo"),
-})
+});
 
 export const schema = {
   mindsets,
   methods,
   success_logs,
-}
+};
 
-
-
-export const mindsetsInsertSchema = createInsertSchema(mindsets );
+export const mindsetsInsertSchema = createInsertSchema(mindsets);
 export type MindsetInsert = z.infer<typeof mindsetsInsertSchema>;
 
 export const mindsetsSelectSchema = createSelectSchema(mindsets);

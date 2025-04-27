@@ -1,44 +1,44 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
-import { db } from "@/lib/db"
-import { success_logs, Method, SuccessLog, methods } from "@/db/schema"
-import { useAtomValue } from "jotai"
-import { allMethodsAtom, allSuccessLogsAtom } from "@/hooks/use-live-sync"
-import { v4 as uuidv4 } from "uuid"
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { db } from "@/lib/db";
+import { success_logs, Method, SuccessLog } from "@/db/schema";
+import { useAtomValue } from "jotai";
+import { allMethodsAtom, allSuccessLogsAtom } from "@/hooks/use-live-sync";
+import { v4 as uuidv4 } from "uuid";
+import { useState } from "react";
 
 interface MethodListProps {
-  mindsetId: string
-  isArchived: boolean
+  mindsetId: string;
+  isArchived: boolean;
 }
 
 export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
   const methodsItem = useAtomValue(allMethodsAtom).filter(
-    (m: Method) => m.mindsetId === mindsetId
-  )
+    (m: Method) => m.mindsetId === mindsetId,
+  );
   const successLogs = useAtomValue(allSuccessLogsAtom).filter(
-    (s: SuccessLog) => s.mindsetId === mindsetId
-  )
+    (s: SuccessLog) => s.mindsetId === mindsetId,
+  );
 
-  const [isAddingLog, setIsAddingLog] = useState<Record<string, boolean>>({})
-  const [newLogMemo, setNewLogMemo] = useState<Record<string, string>>({})
+  const [isAddingLog, setIsAddingLog] = useState<Record<string, boolean>>({});
+  const [newLogMemo, setNewLogMemo] = useState<Record<string, string>>({});
 
   const getSuccessCount = (methodId: string) =>
-    successLogs.filter((log) => log.methodId === methodId).length
+    successLogs.filter((log) => log.methodId === methodId).length;
 
   const handleAddLog = async (methodId: string) => {
-    const memo = newLogMemo[methodId]?.trim()
-    if (!memo) return
+    const memo = newLogMemo[methodId]?.trim();
+    if (!memo) return;
 
     try {
       await db.insert(success_logs).values({
@@ -47,20 +47,20 @@ export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
         methodId,
         memo,
         createdAt: new Date(),
-      })
-      setIsAddingLog((prev) => ({ ...prev, [methodId]: false }))
-      setNewLogMemo((prev) => ({ ...prev, [methodId]: "" }))
+      });
+      setIsAddingLog((prev) => ({ ...prev, [methodId]: false }));
+      setNewLogMemo((prev) => ({ ...prev, [methodId]: "" }));
     } catch (error) {
-      console.error("Failed to add success log:", error)
+      console.error("Failed to add success log:", error);
     }
-  }
+  };
 
   if (methodsItem.length === 0) {
     return (
       <div className="text-center py-4 text-muted-foreground">
         メソッドはありません
       </div>
-    )
+    );
   }
 
   return (
@@ -81,7 +81,10 @@ export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
                   placeholder="成功体験のメモを入力..."
                   value={newLogMemo[method.id] || ""}
                   onChange={(e) =>
-                    setNewLogMemo((prev) => ({ ...prev, [method.id]: e.target.value }))
+                    setNewLogMemo((prev) => ({
+                      ...prev,
+                      [method.id]: e.target.value,
+                    }))
                   }
                 />
                 <div className="flex space-x-2">
@@ -92,7 +95,10 @@ export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
                     size="sm"
                     variant="outline"
                     onClick={() =>
-                      setIsAddingLog((prev) => ({ ...prev, [method.id]: false }))
+                      setIsAddingLog((prev) => ({
+                        ...prev,
+                        [method.id]: false,
+                      }))
                     }
                   >
                     キャンセル
@@ -118,13 +124,13 @@ export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
           <CardFooter className="pt-0">
             {getSuccessCount(method.id) > 0 ? (
               <div className="text-sm text-muted-foreground">
-                最新の成功: {" "}
+                最新の成功:{" "}
                 {new Date(
                   Math.max(
                     ...successLogs
                       .filter((log) => log.methodId === method.id)
-                      .map((log) => new Date(log.createdAt).getTime())
-                  )
+                      .map((log) => new Date(log.createdAt).getTime()),
+                  ),
                 ).toLocaleDateString()}
               </div>
             ) : (
@@ -136,5 +142,5 @@ export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
         </Card>
       ))}
     </div>
-  )
+  );
 }

@@ -40,12 +40,8 @@
           "name": "methods_mindset_id_mindsets_id_fk",
           "tableFrom": "methods",
           "tableTo": "mindsets",
-          "columnsFrom": [
-            "mindset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mindset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -137,12 +133,8 @@
           "name": "success_logs_mindset_id_mindsets_id_fk",
           "tableFrom": "success_logs",
           "tableTo": "mindsets",
-          "columnsFrom": [
-            "mindset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mindset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -150,12 +142,8 @@
           "name": "success_logs_method_id_methods_id_fk",
           "tableFrom": "success_logs",
           "tableTo": "methods",
-          "columnsFrom": [
-            "method_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["method_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

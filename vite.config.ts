@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from "path"
-import tailwindcss from "@tailwindcss/vite"
-
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,16 +11,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: "/mind-updater/",
   optimizeDeps: {
-    exclude: ['@electric-sql/pglite'],
+    exclude: ["@electric-sql/pglite"],
   },
   worker: {
-    format: 'es',
+    format: "es",
   },
   build: {
-    target: 'esnext', // ←これ
+    target: "esnext", // ←これ
   },
   esbuild: {
-    target: 'esnext', // ←これ
+    target: "esnext", // ←これ
   },
-})
+});
