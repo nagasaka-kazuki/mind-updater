@@ -5,6 +5,7 @@ import './index.css'
 import App from './App'
 import migrations from './db/migration.json'
 import { db } from './lib/db'
+import { Provider } from 'jotai'
 
 async function migrateAndRender() {
   try {
@@ -23,7 +24,9 @@ async function migrateAndRender() {
     const root = createRoot(container)
     root.render(
       <React.StrictMode>
+        <Provider>
         <App />
+        </Provider>
       </React.StrictMode>
     )
   } catch (error) {

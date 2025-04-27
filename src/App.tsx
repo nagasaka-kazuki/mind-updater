@@ -8,7 +8,7 @@ import MindsetList from "@/components/mindset-list"
 import NewMindsetForm from "@/components/new-mindset-form"
 import NewSuccessLogForm from "@/components/new-success-log-form"
 import {  isLoadingAtom, useLiveSyncSetup } from "./hooks/use-live-sync"
-import { Provider, useAtomValue } from "jotai"
+import { useAtomValue } from "jotai"
 
 export default function Home() {
   useLiveSyncSetup()
@@ -35,7 +35,6 @@ export default function Home() {
   }
 
   return (
-    <Provider>
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6 text-center">マインドセット管理</h1>
 
@@ -65,6 +64,5 @@ export default function Home() {
         </TabsContent>
       </Tabs>
     </div>
-    </Provider>
   )
 }

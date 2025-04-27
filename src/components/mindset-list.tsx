@@ -80,43 +80,16 @@ export default function MindsetList({ onArchive, onUnarchive, isArchiveList }: M
           >
             <div className="flex items-center justify-between w-full">
               <span>{mindset.title}</span>
-              <div className="flex items-center space-x-2">
-                {isArchiveList ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={e => {
-                      e.stopPropagation()
-                      onUnarchive(mindset.id)
-                    }}
-                  >
-                    <RotateCcw className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">復元</span>
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={e => {
-                      e.stopPropagation()
-                      onArchive(mindset.id)
-                    }}
-                  >
-                    <Archive className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">アーカイブ</span>
-                  </Button>
-                )}
-              </div>
+              
             </div>
           </AccordionTrigger>
           <AccordionContent>
+            
             <div className="p-4 space-y-4">
               {!isArchiveList && <NewMethodForm mindsetId={mindset.id} />}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">メソッド</h3>
                 <MethodList
-                  methods={methodsData[mindset.id] ?? []}
-                  successLogs={successLogsData[mindset.id] ?? []}
                   mindsetId={mindset.id}
                   isArchived={isArchiveList}
                 />

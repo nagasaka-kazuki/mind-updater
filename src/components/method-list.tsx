@@ -1,10 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -13,22 +12,24 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import { db } from "@/lib/db"
-import { success_logs, Method, SuccessLog } from "@/db/schema"
-import { v4 } from "uuid"
+import { success_logs, Method, SuccessLog, methods } from "@/db/schema"
+import { useAtomValue } from "jotai"
+import { allMethodsAtom, allSuccessLogsAtom } from "@/hooks/use-live-sync"
+import { v4 as uuidv4 } from "uuid"
 
 interface MethodListProps {
-  methods: Method[]
-  successLogs: SuccessLog[]
   mindsetId: string
   isArchived: boolean
 }
 
-export default function MethodList({
-  methods,
-  successLogs,
-  mindsetId,
-  isArchived,
-}: MethodListProps) {
+export default function MethodList({ mindsetId, isArchived }: MethodListProps) {
+  const methodsItem = useAtomValue(allMethodsAtom).filter(
+    (m: Method) => m.mindsetId === mindsetId
+  )
+  const successLogs = useAtomValue(allSuccessLogsAtom).filter(
+    (s: SuccessLog) => s.mindsetId === mindsetId
+  )
+
   const [isAddingLog, setIsAddingLog] = useState<Record<string, boolean>>({})
   const [newLogMemo, setNewLogMemo] = useState<Record<string, string>>({})
 
@@ -38,8 +39,15 @@ export default function MethodList({
   const handleAddLog = async (methodId: string) => {
     const memo = newLogMemo[methodId]?.trim()
     if (!memo) return
+
     try {
-      await db.insert(success_logs).values({ id:v4(),mindsetId, methodId, memo, createdAt: new Date() })
+      await db.insert(success_logs).values({
+        id: uuidv4(),
+        mindsetId,
+        methodId,
+        memo,
+        createdAt: new Date(),
+      })
       setIsAddingLog((prev) => ({ ...prev, [methodId]: false }))
       setNewLogMemo((prev) => ({ ...prev, [methodId]: "" }))
     } catch (error) {
@@ -47,7 +55,7 @@ export default function MethodList({
     }
   }
 
-  if (methods.length === 0) {
+  if (methodsItem.length === 0) {
     return (
       <div className="text-center py-4 text-muted-foreground">
         メソッドはありません
@@ -57,15 +65,13 @@ export default function MethodList({
 
   return (
     <div className="grid gap-4">
-      {methods.map((method) => (
+      {methodsItem.map((method) => (
         <Card key={method.id}>
           <CardHeader className="pb-2">
             <CardTitle>{method.title}</CardTitle>
-            <CardDescription>
-              <Badge variant="outline" className="mt-1">
-                成功ログ: {getSuccessCount(method.id)}件
-              </Badge>
-            </CardDescription>
+            <Badge variant="outline" className="mt-1">
+              成功ログ: {getSuccessCount(method.id)}件
+            </Badge>
           </CardHeader>
           <CardContent className="pb-2">
             {isAddingLog[method.id] ? (
@@ -110,7 +116,7 @@ export default function MethodList({
             )}
           </CardContent>
           <CardFooter className="pt-0">
-            {successLogs.filter((log) => log.methodId === method.id).length > 0 ? (
+            {getSuccessCount(method.id) > 0 ? (
               <div className="text-sm text-muted-foreground">
                 最新の成功: {" "}
                 {new Date(
