@@ -6,19 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { db } from "@/lib/db"
 import { mindsets } from "@/db/schema"
+import { v4 } from "uuid"
 
 export default function NewMindsetForm() {
   const [title, setTitle] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault()
     if (!title.trim()) return
 
     setIsSubmitting(true)
     try {
       await db.insert(mindsets).values({
-        userId: 1, // 仮のユーザーID
+        id:v4(),
         title: title.trim(),
         archived: false,
         createdAt: new Date(),

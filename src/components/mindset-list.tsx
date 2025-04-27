@@ -1,71 +1,79 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import React, { useState, useMemo } from "react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { Archive, RotateCcw } from "lucide-react"
-import { pgClient } from "@/lib/db"
 import MethodList from "./method-list"
 import NewMethodForm from "./new-method-form"
+import { useAtomValue } from "jotai"
+import {
+  activeMindsetsAtom,
+  archivedMindsetsAtom,
+  allMethodsAtom,
+  allSuccessLogsAtom,
+} from "@/hooks/use-live-sync"
+import { Method, SuccessLog } from "@/db/schema"
 
-export default function MindsetList({ mindsets, onArchive, onUnarchive, isArchiveList }) {
-  const [expandedMindsets, setExpandedMindsets] = useState({})
-  const [methodsData, setMethodsData] = useState({})
-  const [successLogsData, setSuccessLogsData] = useState({})
+interface MindsetListProps {
+  onArchive: (mindsetId: string) => void
+  onUnarchive: (mindsetId: string) => void
+  isArchiveList: boolean
+}
 
-  useEffect(() => {
-    // Initialize expanded state for all mindsets
-    const initialExpandedState = {}
-    mindsets.forEach((mindset) => {
-      initialExpandedState[mindset.id] = false
-    })
-    setExpandedMindsets(initialExpandedState)
+export default function MindsetList({ onArchive, onUnarchive, isArchiveList }: MindsetListProps) {
+  const [expandedMindsets, setExpandedMindsets] = useState<Record<string, boolean>>({})
 
-    // Set up live queries for each mindset's methods and success logs
-    mindsets.forEach((mindset) => {
-      const methodsQuery = pgClient.live(
-        `SELECT * FROM methods WHERE mindset_id = ${mindset.id} ORDER BY created_at DESC`,
-      )
+  const mindsets = useAtomValue(
+    isArchiveList ? archivedMindsetsAtom : activeMindsetsAtom
+  )
+  const allMethods = useAtomValue(allMethodsAtom)
+  const allSuccessLogs = useAtomValue(allSuccessLogsAtom)
 
-      const logsQuery = pgClient.live(
-        `SELECT * FROM success_logs WHERE mindset_id = ${mindset.id} ORDER BY created_at DESC`,
-      )
+  const methodsData = useMemo(() => {
+    return allMethods.reduce<Record<string, Method[]>>((acc, method) => {
+      const { mindsetId } = method
+      if (!acc[mindsetId]) acc[mindsetId] = []
+      acc[mindsetId].push(method)
+      return acc
+    }, {})
+  }, [allMethods])
 
-      methodsQuery.subscribe((data) => {
-        setMethodsData((prev) => ({
-          ...prev,
-          [mindset.id]: data,
-        }))
-      })
+  const successLogsData = useMemo(() => {
+    return allSuccessLogs.reduce<Record<string, SuccessLog[]>>((acc, log) => {
+      const { mindsetId } = log
+      if (!acc[mindsetId]) acc[mindsetId] = []
+      acc[mindsetId].push(log)
+      return acc
+    }, {})
+  }, [allSuccessLogs])
 
-      logsQuery.subscribe((data) => {
-        setSuccessLogsData((prev) => ({
-          ...prev,
-          [mindset.id]: data,
-        }))
-      })
-    })
-  }, [mindsets])
-
-  const handleToggle = (mindsetId) => {
-    setExpandedMindsets((prev) => ({
+  const handleToggle = (mindsetId: string) => {
+    setExpandedMindsets(prev => ({
       ...prev,
       [mindsetId]: !prev[mindsetId],
     }))
   }
 
-  if (mindsets.length === 0) {
+  if (!mindsets.length) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        {isArchiveList ? "アーカイブされたマインドセットはありません" : "マインドセットがありません"}
+        {isArchiveList
+          ? "アーカイブされたマインドセットはありません"
+          : "マインドセットがありません"}
       </div>
     )
   }
 
   return (
     <Accordion type="multiple" className="w-full">
-      {mindsets.map((mindset) => (
-        <AccordionItem key={mindset.id} value={mindset.id.toString()}>
+      {mindsets.map(mindset => (
+        <AccordionItem key={mindset.id} value={mindset.id}>
           <AccordionTrigger
             onClick={() => handleToggle(mindset.id)}
             className="flex justify-between px-4 py-2 hover:bg-muted/50 rounded-md"
@@ -77,7 +85,7 @@ export default function MindsetList({ mindsets, onArchive, onUnarchive, isArchiv
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation()
                       onUnarchive(mindset.id)
                     }}
@@ -89,7 +97,7 @@ export default function MindsetList({ mindsets, onArchive, onUnarchive, isArchiv
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation()
                       onArchive(mindset.id)
                     }}
@@ -104,31 +112,26 @@ export default function MindsetList({ mindsets, onArchive, onUnarchive, isArchiv
           <AccordionContent>
             <div className="p-4 space-y-4">
               {!isArchiveList && <NewMethodForm mindsetId={mindset.id} />}
-
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">メソッド</h3>
                 <MethodList
-                  methods={methodsData[mindset.id] || []}
-                  successLogs={successLogsData[mindset.id] || []}
+                  methods={methodsData[mindset.id] ?? []}
+                  successLogs={successLogsData[mindset.id] ?? []}
                   mindsetId={mindset.id}
                   isArchived={isArchiveList}
                 />
               </div>
-
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">成功ログ</h3>
                 <div className="space-y-2">
-                  {(successLogsData[mindset.id] || []).length > 0 ? (
-                    (successLogsData[mindset.id] || []).map((log) => (
+                  {successLogsData[mindset.id]?.length ? (
+                    successLogsData[mindset.id].map(log => (
                       <div key={log.id} className="p-3 bg-muted rounded-md">
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(log.createdAt).toLocaleString()}
-                          </span>
+                          <span className="text-sm text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
                           {log.methodId && (
                             <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              {(methodsData[mindset.id] || []).find((m) => m.id === log.methodId)?.title ||
-                                "メソッド不明"}
+                              {methodsData[mindset.id]?.find(m => m.id === log.methodId)?.title ?? "メソッド不明"}
                             </span>
                           )}
                         </div>

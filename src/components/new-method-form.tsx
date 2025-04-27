@@ -5,21 +5,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { db } from "@/lib/db"
 import { methods } from "@/db/schema"
+import { v4 as uuidv4 } from 'uuid';
 
-export default function NewMethodForm({ mindsetId }) {
+export default function NewMethodForm({ mindsetId }: { mindsetId: string }) {
   const [title, setTitle] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isFormVisible, setIsFormVisible] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault()
     if (!title.trim()) return
 
     setIsSubmitting(true)
     try {
       await db.insert(methods).values({
-        mindsetId,
+        id:uuidv4(),
         title: title.trim(),
+        mindsetId,
         createdAt: new Date(),
       })
       setTitle("")

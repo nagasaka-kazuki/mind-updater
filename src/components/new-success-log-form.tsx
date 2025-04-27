@@ -1,53 +1,49 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { db, pgClient } from "@/lib/db"
-import { success_logs } from "@/db/schema"
+import { db } from "@/lib/db"
+import { success_logs, Method, Mindset } from "@/db/schema"
+import { useAtomValue } from "jotai"
+import { activeMindsetsAtom, allMethodsAtom } from "@/hooks/use-live-sync"
+import { v4 } from "uuid"
 
-export default function NewSuccessLogForm({ mindsets }) {
-  const [selectedMindset, setSelectedMindset] = useState("")
-  const [selectedMethod, setSelectedMethod] = useState("")
-  const [memo, setMemo] = useState("")
-  const [methods, setMethods] = useState([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (selectedMindset) {
-      const methodsQuery = pgClient.live(
-        `SELECT * FROM methods WHERE mindset_id = ${selectedMindset} ORDER BY created_at DESC`,
-      )
+export default function NewSuccessLogForm() {
+  const activeMindsets = useAtomValue(activeMindsetsAtom)
+  const allMethods = useAtomValue(allMethodsAtom)
 
-      methodsQuery.subscribe((data) => {
-        setMethods(data)
-      })
-    } else {
-      setMethods([])
-    }
+  const [selectedMindset, setSelectedMindset] = useState<string>("")
+  const [selectedMethod, setSelectedMethod] = useState<string>("")
+  const [memo, setMemo] = useState<string>("")
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
-    // Reset selected method when mindset changes
-    setSelectedMethod("")
-  }, [selectedMindset])
+  // フィルタされたメソッドリスト
+  const methods = useMemo<Method[]>(
+    () => allMethods.filter((m) => m.mindsetId === selectedMindset),
+    [allMethods, selectedMindset]
+  )
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedMindset || !memo.trim()) return
 
     setIsSubmitting(true)
     try {
       await db.insert(success_logs).values({
-        mindsetId: Number.parseInt(selectedMindset),
-        methodId: selectedMethod ? Number.parseInt(selectedMethod) : null,
+        id:v4(),
+        mindsetId: selectedMindset,
+        methodId: selectedMethod || undefined,
         memo: memo.trim(),
         createdAt: new Date(),
       })
-
-      // Reset form
-      setMemo("")
+      // リセット
+      setSelectedMindset("")
       setSelectedMethod("")
+      setMemo("")
     } catch (error) {
       console.error("Failed to create success log:", error)
     } finally {
@@ -63,24 +59,32 @@ export default function NewSuccessLogForm({ mindsets }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* マインドセット選択 */}
             <div className="space-y-2">
               <label htmlFor="mindset-select" className="text-sm font-medium">
                 マインドセット
               </label>
-              <Select value={selectedMindset} onValueChange={setSelectedMindset}>
+              <Select
+                value={selectedMindset}
+                onValueChange={(value) => {
+                  setSelectedMindset(value)
+                  setSelectedMethod("")
+                }}
+              >
                 <SelectTrigger id="mindset-select">
                   <SelectValue placeholder="マインドセットを選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mindsets.map((mindset) => (
-                    <SelectItem key={mindset.id} value={mindset.id.toString()}>
-                      {mindset.title}
+                  {activeMindsets.map((ms: Mindset) => (
+                    <SelectItem key={ms.id} value={ms.id}>
+                      {ms.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* メソッド選択 */}
             <div className="space-y-2">
               <label htmlFor="method-select" className="text-sm font-medium">
                 メソッド (任意)
@@ -94,8 +98,8 @@ export default function NewSuccessLogForm({ mindsets }) {
                   <SelectValue placeholder="メソッドを選択 (任意)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {methods.map((method) => (
-                    <SelectItem key={method.id} value={method.id.toString()}>
+                  {methods.map((method: Method) => (
+                    <SelectItem key={method.id} value={method.id}>
                       {method.title}
                     </SelectItem>
                   ))}
@@ -104,6 +108,7 @@ export default function NewSuccessLogForm({ mindsets }) {
             </div>
           </div>
 
+          {/* メモ入力 */}
           <div className="space-y-2">
             <label htmlFor="memo" className="text-sm font-medium">
               成功体験メモ
@@ -117,7 +122,12 @@ export default function NewSuccessLogForm({ mindsets }) {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting || !selectedMindset || !memo.trim()}>
+          {/* 送信ボタン */}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting || !selectedMindset || !memo.trim()}
+          >
             {isSubmitting ? "記録中..." : "記録する"}
           </Button>
         </form>

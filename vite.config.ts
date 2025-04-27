@@ -12,5 +12,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-
+  optimizeDeps: {
+    exclude: ['@electric-sql/pglite'],
+  },
+  worker: {
+    format: 'es',
+  },
+  build: {
+    target: 'esnext', // ←これ
+  },
+  esbuild: {
+    target: 'esnext', // ←これ
+  },
 })
