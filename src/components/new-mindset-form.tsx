@@ -1,36 +1,31 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { db } from "@/lib/db";
-import { mindsets } from "@/db/schema";
-import { v4 } from "uuid";
+import type React from "react"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { createMindset } from "@/lib/actions"
 
 export default function NewMindsetForm() {
-  const [title, setTitle] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    if (!title.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!title.trim()) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      await db.insert(mindsets).values({
-        id: v4(),
-        title: title.trim(),
-        archived: false,
-        createdAt: new Date(),
-      });
-      setTitle("");
+      await createMindset(title)
+      setTitle("")
     } catch (error) {
-      console.error("Failed to create mindset:", error);
+      console.error("Failed to create mindset:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Card className="mb-6">
@@ -53,5 +48,5 @@ export default function NewMindsetForm() {
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -1,75 +1,81 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { db } from "@/lib/db";
-import { methods } from "@/db/schema";
-import { v4 as uuidv4 } from "uuid";
+import type React from "react"
 
-export default function NewMethodForm({ mindsetId }: { mindsetId: string }) {
-  const [title, setTitle] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFormVisible, setIsFormVisible] = useState(false);
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createMethod } from "@/lib/actions"
+import type { Mindset } from "@/db/schema"
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    if (!title.trim()) return;
+interface NewMethodFormProps {
+  mindsets: Mindset[]
+  preselectedMindsetId?: string
+  onSuccess?: () => void
+}
 
-    setIsSubmitting(true);
+export default function NewMethodForm({ mindsets, preselectedMindsetId = "", onSuccess }: NewMethodFormProps) {
+  const [title, setTitle] = useState("")
+  const [selectedMindsetId, setSelectedMindsetId] = useState(preselectedMindsetId)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!title.trim() || !selectedMindsetId) return
+
+    setIsSubmitting(true)
     try {
-      await db.insert(methods).values({
-        id: uuidv4(),
-        title: title.trim(),
-        mindsetId,
-        createdAt: new Date(),
-      });
-      setTitle("");
-      setIsFormVisible(false);
+      await createMethod(title, selectedMindsetId)
+      setTitle("")
+      if (!preselectedMindsetId) {
+        setSelectedMindsetId("")
+      }
+      onSuccess?.()
     } catch (error) {
-      console.error("Failed to create method:", error);
+      console.error("Failed to create method:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
-    <div className="space-y-2">
-      {isFormVisible ? (
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <Input
-            placeholder="メソッドのタイトル"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full"
-          />
-          <div className="flex space-x-2">
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isSubmitting || !title.trim()}
-            >
-              {isSubmitting ? "追加中..." : "追加"}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsFormVisible(false)}
-            >
-              キャンセル
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsFormVisible(true)}
-        >
-          新しいメソッドを追加
-        </Button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="method-title" className="text-sm font-medium">
+          メソッド名
+        </label>
+        <Input
+          id="method-title"
+          placeholder="メソッドのタイトル"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+
+      {!preselectedMindsetId && (
+        <div className="space-y-2">
+          <label htmlFor="mindset-select" className="text-sm font-medium">
+            マインドセット
+          </label>
+          <Select value={selectedMindsetId} onValueChange={setSelectedMindsetId}>
+            <SelectTrigger id="mindset-select">
+              <SelectValue placeholder="マインドセットを選択" />
+            </SelectTrigger>
+            <SelectContent>
+              {mindsets.map((mindset) => (
+                <SelectItem key={mindset.id} value={mindset.id}>
+                  {mindset.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       )}
-    </div>
-  );
+
+      <Button type="submit" className="w-full" disabled={isSubmitting || !title.trim() || !selectedMindsetId}>
+        {isSubmitting ? "追加中..." : "追加"}
+      </Button>
+    </form>
+  )
 }

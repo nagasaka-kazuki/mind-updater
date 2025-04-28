@@ -1,124 +1,120 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import MethodList from "./method-list";
-import NewMethodForm from "./new-method-form";
-import { useAtomValue } from "jotai";
-import {
-  activeMindsetsAtom,
-  archivedMindsetsAtom,
-  allMethodsAtom,
-  allSuccessLogsAtom,
-} from "@/hooks/use-live-sync";
-import { Method, SuccessLog } from "@/db/schema";
+import { useMemo, useState } from "react"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { useAtomValue } from "jotai"
+import { allMindsetsAtom, activeMethodsAtom, archivedMethodsAtom } from "@/hooks/use-live-sync"
+import { Button } from "@/components/ui/button"
+import { PlusCircle, Trash2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import NewMethodForm from "./new-method-form"
+import { deleteMindset } from "@/lib/actions"
+import { useDialog, useDialogGroup } from "@/hooks/use-dialog"
+import MethodList from "./method-list"
 
 interface MindsetListProps {
-  onArchive: (mindsetId: string) => void;
-  onUnarchive: (mindsetId: string) => void;
-  isArchiveList: boolean;
+  isArchiveList: boolean
 }
 
 export default function MindsetList({ isArchiveList }: MindsetListProps) {
-  const [_, setExpandedMindsets] = useState<Record<string, boolean>>({});
+  const allMindsets = useAtomValue(allMindsetsAtom)
+  const activeMethods = useAtomValue(activeMethodsAtom)
+  const archivedMethods = useAtomValue(archivedMethodsAtom)
 
-  const mindsets = useAtomValue(
-    isArchiveList ? archivedMindsetsAtom : activeMindsetsAtom,
-  );
-  const allMethods = useAtomValue(allMethodsAtom);
-  const allSuccessLogs = useAtomValue(allSuccessLogsAtom);
+  const { openDialogs, setOpenDialogs } = useDialogGroup()
+  const { isOpen: isDeleteDialogOpen, open: openDeleteDialog, setIsOpen: setDeleteDialogOpen } = useDialog()
+  const [mindsetToDelete, setMindsetToDelete] = useState<string>("")
 
-  const methodsData = useMemo(() => {
-    return allMethods.reduce<Record<string, Method[]>>((acc, method) => {
-      const { mindsetId } = method;
-      if (!acc[mindsetId]) acc[mindsetId] = [];
-      acc[mindsetId].push(method);
-      return acc;
-    }, {});
-  }, [allMethods]);
+  // Get methods for each mindset
+  const methodsByMindset = useMemo(() => {
+    const methods = isArchiveList ? archivedMethods : activeMethods
+    return methods.reduce<Record<string, typeof methods>>((acc, method) => {
+      if (!acc[method.mindsetId]) {
+        acc[method.mindsetId] = []
+      }
+      acc[method.mindsetId].push(method)
+      return acc
+    }, {})
+  }, [isArchiveList, activeMethods, archivedMethods])
 
-  const successLogsData = useMemo(() => {
-    return allSuccessLogs.reduce<Record<string, SuccessLog[]>>((acc, log) => {
-      const { mindsetId } = log;
-      if (!acc[mindsetId]) acc[mindsetId] = [];
-      acc[mindsetId].push(log);
-      return acc;
-    }, {});
-  }, [allSuccessLogs]);
+  // Filter mindsets that have methods in the current view (active/archived)
+  const filteredMindsets = useMemo(() => {
+    return allMindsets.filter((mindset) => {
+      const hasMethods = Boolean(methodsByMindset[mindset.id]?.length)
+      return isArchiveList ? hasMethods : true // Show all mindsets in active view
+    })
+  }, [allMindsets, methodsByMindset, isArchiveList])
 
-  const handleToggle = (mindsetId: string) => {
-    setExpandedMindsets((prev) => ({
-      ...prev,
-      [mindsetId]: !prev[mindsetId],
-    }));
-  };
+  const handleDeleteMindset = async (mindsetId: string) => {
+    if (window.confirm("このマインドセットを削除しますか？関連するすべてのメソッドと成功ログも削除されます。")) {
+      try {
+        await deleteMindset(mindsetId)
+      } catch (error) {
+        console.error("Failed to delete mindset:", error)
+      }
+    }
+  }
 
-  if (!mindsets.length) {
+  const openNewMethodDialog = (mindsetId: string) => {
+    setOpenDialogs((prev) => ({ ...prev, [mindsetId]: true }))
+  }
+
+  const confirmDeleteMindset = (mindsetId: string) => {
+    setMindsetToDelete(mindsetId)
+    openDeleteDialog()
+  }
+
+  if (!filteredMindsets.length) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        {isArchiveList
-          ? "アーカイブされたマインドセットはありません"
-          : "マインドセットがありません"}
+        {isArchiveList ? "アーカイブされたメソッドはありません" : "マインドセットがありません"}
       </div>
-    );
+    )
   }
 
   return (
-    <Accordion type="multiple" className="w-full">
-      {mindsets.map((mindset) => (
-        <AccordionItem key={mindset.id} value={mindset.id}>
-          <AccordionTrigger
-            onClick={() => handleToggle(mindset.id)}
-            className="flex justify-between px-4 py-2 hover:bg-muted/50 rounded-md"
-          >
-            <div className="flex items-center justify-between w-full">
-              <span>{mindset.title}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="p-4 space-y-4">
-              {!isArchiveList && <NewMethodForm mindsetId={mindset.id} />}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">メソッド</h3>
-                <MethodList mindsetId={mindset.id} isArchived={isArchiveList} />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">成功ログ</h3>
-                <div className="space-y-2">
-                  {successLogsData[mindset.id]?.length ? (
-                    successLogsData[mindset.id].map((log) => (
-                      <div key={log.id} className="p-3 bg-muted rounded-md">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(log.createdAt).toLocaleString()}
-                          </span>
-                          {log.methodId && (
-                            <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              {methodsData[mindset.id]?.find(
-                                (m) => m.id === log.methodId,
-                              )?.title ?? "メソッド不明"}
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-1">{log.memo}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      成功ログはありません
-                    </div>
-                  )}
-                </div>
+    <>
+      <Accordion type="multiple" className="w-full space-y-4">
+        {filteredMindsets.map((mindset) => (
+          <AccordionItem key={mindset.id} value={mindset.id} className="border rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <AccordionTrigger className="hover:no-underline py-2">
+                <span className="text-lg font-medium">{mindset.title}</span>
+              </AccordionTrigger>
+              <div className="flex items-center gap-2 mr-4">
+                <Button variant="outline" size="sm" onClick={() => openNewMethodDialog(mindset.id)}>
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  新しいメソッド
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleDeleteMindset(mindset.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
-  );
+            <AccordionContent>
+              <div className="pt-4">
+                <MethodList mindsetId={mindset.id} isArchiveList={isArchiveList} />
+              </div>
+            </AccordionContent>
+
+            <Dialog
+              open={openDialogs[mindset.id]}
+              onOpenChange={(open) => setOpenDialogs((prev) => ({ ...prev, [mindset.id]: open }))}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>新しいメソッドを追加</DialogTitle>
+                </DialogHeader>
+                <NewMethodForm
+                  mindsets={allMindsets}
+                  preselectedMindsetId={mindset.id}
+                  onSuccess={() => setOpenDialogs((prev) => ({ ...prev, [mindset.id]: false }))}
+                />
+              </DialogContent>
+            </Dialog>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </>
+  )
 }
