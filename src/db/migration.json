@@ -6,10 +6,22 @@
       "\nCREATE TABLE \"success_logs\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"mindset_id\" uuid NOT NULL,\n\t\"method_id\" uuid,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"memo\" text\n);\n",
       "\nALTER TABLE \"methods\" ADD CONSTRAINT \"methods_mindset_id_mindsets_id_fk\" FOREIGN KEY (\"mindset_id\") REFERENCES \"public\".\"mindsets\"(\"id\") ON DELETE cascade ON UPDATE no action;",
       "\nALTER TABLE \"success_logs\" ADD CONSTRAINT \"success_logs_mindset_id_mindsets_id_fk\" FOREIGN KEY (\"mindset_id\") REFERENCES \"public\".\"mindsets\"(\"id\") ON DELETE cascade ON UPDATE no action;",
-      "\nALTER TABLE \"success_logs\" ADD CONSTRAINT \"success_logs_method_id_methods_id_fk\" FOREIGN KEY (\"method_id\") REFERENCES \"public\".\"methods\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+      "\nALTER TABLE \"success_logs\" ADD CONSTRAINT \"success_logs_method_id_methods_id_fk\" FOREIGN KEY (\"method_id\") REFERENCES \"public\".\"methods\"(\"id\") ON DELETE cascade ON UPDATE no action;\n"
     ],
     "bps": true,
     "folderMillis": 1745748587419,
-    "hash": "8958220c0a2a00c90747200002e7b8cbb66c39865f934b97a70325a7945228b2"
+    "hash": "71428454e4ff983eee67b5ed24ab7092132715fc3cac3c2e8d5240266b4b36d9"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"success_logs\" DROP CONSTRAINT \"success_logs_mindset_id_mindsets_id_fk\";\n",
+      "\nALTER TABLE \"success_logs\" ALTER COLUMN \"method_id\" SET NOT NULL;",
+      "\nALTER TABLE \"methods\" ADD COLUMN \"archived\" boolean DEFAULT false NOT NULL;",
+      "\nALTER TABLE \"mindsets\" DROP COLUMN \"archived\";",
+      "\nALTER TABLE \"success_logs\" DROP COLUMN \"mindset_id\";"
+    ],
+    "bps": true,
+    "folderMillis": 1745895524574,
+    "hash": "d61b85ffe69c9beb02176b4c1f381fd6009c91da4be6685be7d02b00d1fa575f"
   }
 ]

@@ -8,6 +8,13 @@
       "when": 1745748587419,
       "tag": "0000_dry_mentor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1745895524574,
+      "tag": "0001_light_hiroim",
+      "breakpoints": true
     }
   ]
 }
