@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import migrations from "./db/migration.json";
-import { db, pgClient } from "./lib/db";
+import { db } from "./lib/db";
 import { Provider } from "jotai";
 
 async function migrateAndRender() {
@@ -31,15 +31,6 @@ async function migrateAndRender() {
     );
   } catch (error) {
     console.error("Failed to migrate or render app:", error);
-    const { rows } = await pgClient.query(`
-    SELECT tablename 
-    FROM pg_tables 
-    WHERE schemaname = 'public'
-  `);
-    // すべて CASCADE 付きで空にする
-    for (const { tablename } of rows as any) {
-      await db.execute(`TRUNCATE TABLE "${tablename}" CASCADE`);
-    }
   }
 }
 
