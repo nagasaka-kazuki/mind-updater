@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { createMindset } from "@/lib/actions"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createMindset } from "@/lib/actions";
 
 export default function NewMindsetForm() {
-  const [title, setTitle] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [title, setTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) return
+    e.preventDefault();
+    if (!title.trim()) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await createMindset(title)
-      setTitle("")
+      await createMindset(title);
+      setTitle("");
     } catch (error) {
-      console.error("Failed to create mindset:", error)
+      console.error("Failed to create mindset:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Card className="mb-6">
@@ -48,5 +48,5 @@ export default function NewMindsetForm() {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

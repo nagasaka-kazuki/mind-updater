@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import MindsetList from "@/components/mindset-list"
-import NewMindsetForm from "@/components/new-mindset-form"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MindsetList from "@/components/mindset-list";
+import NewMindsetForm from "@/components/new-mindset-form";
 
 export default function MindsetListPage() {
   return (
@@ -24,5 +24,5 @@ export default function MindsetListPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

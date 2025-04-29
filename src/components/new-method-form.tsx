@@ -1,43 +1,54 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createMethod } from "@/lib/actions"
-import type { Mindset } from "@/db/schema"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createMethod } from "@/lib/actions";
+import type { Mindset } from "@/db/schema";
 
 interface NewMethodFormProps {
-  mindsets: Mindset[]
-  preselectedMindsetId?: string
-  onSuccess?: () => void
+  mindsets: Mindset[];
+  preselectedMindsetId?: string;
+  onSuccess?: () => void;
 }
 
-export default function NewMethodForm({ mindsets, preselectedMindsetId = "", onSuccess }: NewMethodFormProps) {
-  const [title, setTitle] = useState("")
-  const [selectedMindsetId, setSelectedMindsetId] = useState(preselectedMindsetId)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export default function NewMethodForm({
+  mindsets,
+  preselectedMindsetId = "",
+  onSuccess,
+}: NewMethodFormProps) {
+  const [title, setTitle] = useState("");
+  const [selectedMindsetId, setSelectedMindsetId] =
+    useState(preselectedMindsetId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim() || !selectedMindsetId) return
+    e.preventDefault();
+    if (!title.trim() || !selectedMindsetId) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await createMethod(title, selectedMindsetId)
-      setTitle("")
+      await createMethod(title, selectedMindsetId);
+      setTitle("");
       if (!preselectedMindsetId) {
-        setSelectedMindsetId("")
+        setSelectedMindsetId("");
       }
-      onSuccess?.()
+      onSuccess?.();
     } catch (error) {
-      console.error("Failed to create method:", error)
+      console.error("Failed to create method:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,7 +69,10 @@ export default function NewMethodForm({ mindsets, preselectedMindsetId = "", onS
           <label htmlFor="mindset-select" className="text-sm font-medium">
             マインドセット
           </label>
-          <Select value={selectedMindsetId} onValueChange={setSelectedMindsetId}>
+          <Select
+            value={selectedMindsetId}
+            onValueChange={setSelectedMindsetId}
+          >
             <SelectTrigger id="mindset-select">
               <SelectValue placeholder="マインドセットを選択" />
             </SelectTrigger>
@@ -73,9 +87,13 @@ export default function NewMethodForm({ mindsets, preselectedMindsetId = "", onS
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting || !title.trim() || !selectedMindsetId}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isSubmitting || !title.trim() || !selectedMindsetId}
+      >
         {isSubmitting ? "追加中..." : "追加"}
       </Button>
     </form>
-  )
+  );
 }

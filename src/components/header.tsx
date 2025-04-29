@@ -1,19 +1,21 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ListChecks, Lightbulb } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { ListChecks, Lightbulb } from "lucide-react";
 
-type Page = "methods" | "mindsets"
+type Page = "methods" | "mindsets";
 
 interface HeaderProps {
-  currentPage: Page
-  onChangePage: (page: Page) => void
+  currentPage: Page;
+  onChangePage: (page: Page) => void;
 }
 
 export default function Header({ currentPage, onChangePage }: HeaderProps) {
   return (
     <header className="border-b pb-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">マインドセット管理</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">
+        マインドセット管理
+      </h1>
 
       <div className="flex justify-center gap-4">
         <Button
@@ -34,5 +36,5 @@ export default function Header({ currentPage, onChangePage }: HeaderProps) {
         </Button>
       </div>
     </header>
-  )
+  );
 }
