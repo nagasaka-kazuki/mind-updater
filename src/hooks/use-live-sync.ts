@@ -18,6 +18,7 @@ import { db, pgClient } from "@/lib/db";
 export const allMindsetsAtom = atom<Mindset[]>([]);
 export const activeMethodsAtom = atom<Method[]>([]);
 export const archivedMethodsAtom = atom<Method[]>([]);
+export const allMethodsAtom = atom<Method[]>([]);
 export const allSuccessLogsAtom = atom<SuccessLog[]>([]);
 export const isLoadingAtom = atom<boolean>(true);
 
@@ -52,6 +53,7 @@ export const initLiveSyncAtom = atom(null, async (_, set) => {
         archived: m.archived,
         createdAt: m.created_at,
       }));
+      set(allMethodsAtom, mts);
       set(
         activeMethodsAtom,
         mts.filter((m) => !m.archived),

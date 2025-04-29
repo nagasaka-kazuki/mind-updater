@@ -20,10 +20,7 @@ interface MethodListProps {
   isArchiveList: boolean;
 }
 
-export default function MethodList({
-  mindsetId,
-  isArchiveList,
-}: MethodListProps) {
+export function MethodList({ mindsetId, isArchiveList }: MethodListProps) {
   const activeMethods = useAtomValue(activeMethodsAtom);
   const archivedMethods = useAtomValue(archivedMethodsAtom);
   const allMindsets = useAtomValue(allMindsetsAtom);

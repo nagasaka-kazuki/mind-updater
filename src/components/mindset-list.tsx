@@ -8,11 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useAtomValue } from "jotai";
-import {
-  allMindsetsAtom,
-  activeMethodsAtom,
-  archivedMethodsAtom,
-} from "@/hooks/use-live-sync";
+import { allMindsetsAtom, allMethodsAtom } from "@/hooks/use-live-sync";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2 } from "lucide-react";
 import {
@@ -23,8 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import NewMethodForm from "./new-method-form";
 import { deleteMindset } from "@/lib/actions";
+import { MethodList } from "./method-list";
 import { useDialogGroup } from "@/hooks/use-dialog";
-import MethodList from "./method-list";
 
 interface MindsetListProps {
   isArchiveList: boolean;
@@ -32,30 +28,52 @@ interface MindsetListProps {
 
 export default function MindsetList({ isArchiveList }: MindsetListProps) {
   const allMindsets = useAtomValue(allMindsetsAtom);
-  const activeMethods = useAtomValue(activeMethodsAtom);
-  const archivedMethods = useAtomValue(archivedMethodsAtom);
+  const allMethods = useAtomValue(allMethodsAtom);
 
   const { openDialogs, setOpenDialogs } = useDialogGroup();
 
-  // Get methods for each mindset
-  const methodsByMindset = useMemo(() => {
-    const methods = isArchiveList ? archivedMethods : activeMethods;
-    return methods.reduce<Record<string, typeof methods>>((acc, method) => {
-      if (!acc[method.mindsetId]) {
-        acc[method.mindsetId] = [];
-      }
-      acc[method.mindsetId].push(method);
-      return acc;
-    }, {});
-  }, [isArchiveList, activeMethods, archivedMethods]);
+  // Get all methods for each mindset (both active and archived)
+  const allMethodsByMindset = useMemo(() => {
+    return allMethods.reduce<Record<string, typeof allMethods>>(
+      (acc, method) => {
+        if (!acc[method.mindsetId]) {
+          acc[method.mindsetId] = [];
+        }
+        acc[method.mindsetId].push(method);
+        return acc;
+      },
+      {},
+    );
+  }, [allMethods]);
 
-  // Filter mindsets that have methods in the current view (active/archived)
+  // Filter mindsets based on their methods' archive status
   const filteredMindsets = useMemo(() => {
     return allMindsets.filter((mindset) => {
-      const hasMethods = Boolean(methodsByMindset[mindset.id]?.length);
-      return isArchiveList ? hasMethods : true; // Show all mindsets in active view
+      // Get all methods for this mindset
+      const mindsetMethods = allMethodsByMindset[mindset.id] || [];
+
+      // If there are no methods, show in active view only
+      if (mindsetMethods.length === 0) {
+        return !isArchiveList;
+      }
+
+      // Count active and archived methods
+      const archivedMethodCount = mindsetMethods.filter(
+        (m) => m.archived,
+      ).length;
+
+      if (isArchiveList) {
+        // For archive list: show mindsets where ALL methods are archived
+        return (
+          archivedMethodCount === mindsetMethods.length &&
+          archivedMethodCount > 0
+        );
+      } else {
+        // For active list: show mindsets with at least one active method
+        return archivedMethodCount < mindsetMethods.length;
+      }
     });
-  }, [allMindsets, methodsByMindset, isArchiveList]);
+  }, [allMindsets, allMethodsByMindset, isArchiveList]);
 
   const handleDeleteMindset = async (mindsetId: string) => {
     if (
@@ -79,7 +97,7 @@ export default function MindsetList({ isArchiveList }: MindsetListProps) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         {isArchiveList
-          ? "アーカイブされたメソッドはありません"
+          ? "アーカイブされたマインドセットはありません"
           : "マインドセットがありません"}
       </div>
     );
@@ -92,7 +110,7 @@ export default function MindsetList({ isArchiveList }: MindsetListProps) {
           <AccordionItem
             key={mindset.id}
             value={mindset.id}
-            className="border rounded-lg p-2"
+            className="border rounded-lg p-2 overflow-hidden"
           >
             <div className="flex items-center justify-between">
               <AccordionTrigger className="hover:no-underline py-2">
