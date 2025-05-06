@@ -116,7 +116,9 @@ export default function MindsetList({ isArchiveList }: MindsetListProps) {
               <AccordionTrigger className="hover:no-underline py-2">
                 <span className="text-lg font-medium">{mindset.title}</span>
               </AccordionTrigger>
-              <div className="flex items-center gap-2 mr-4">
+            </div>
+            <AccordionContent>
+              <div className="flex items-center gap-2 mr-4 justify-end">
                 <Button
                   variant="outline"
                   size="sm"
@@ -133,8 +135,7 @@ export default function MindsetList({ isArchiveList }: MindsetListProps) {
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
-            </div>
-            <AccordionContent>
+
               <div className="pt-4">
                 <MethodList
                   mindsetId={mindset.id}

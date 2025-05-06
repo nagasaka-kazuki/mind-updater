@@ -117,16 +117,14 @@ export default function MethodListPage() {
               value={method.id}
               className="border rounded-lg"
             >
-              <div className="flex items-center justify-between px-4">
-                <AccordionTrigger className="py-3 hover:no-underline">
-                  <div className="flex items-center gap-2 text-left">
-                    <span className="font-medium">{method.title}</span>
-                    <Badge variant="outline" className="ml-2">
-                      {mindsetTitle}
-                    </Badge>
-                  </div>
-                </AccordionTrigger>
-                <div className="flex gap-1">
+              <AccordionTrigger>
+                <span className="font-medium">{method.title}</span>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="flex gap-1 justify-end">
+                  <Badge variant="outline" className="ml-2">
+                    {mindsetTitle}
+                  </Badge>
                   <Button
                     variant="outline"
                     size="sm"
@@ -159,8 +157,6 @@ export default function MethodListPage() {
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
-              </div>
-              <AccordionContent className="px-4 pb-4">
                 <div className="space-y-2 mt-2">
                   <SuccessLogList logs={logs} />
                 </div>
